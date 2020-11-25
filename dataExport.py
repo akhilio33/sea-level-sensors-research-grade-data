@@ -87,37 +87,37 @@ filter_data_loss_name = []
 
 for index in sensors_water.index:
 
-    #     # only take sensors that have recent surveys
-    #     if sensors_water.desc[index] in surveyed_sensor_names:
+    # only take sensors that have recent surveys
+    if sensors_water.desc[index] in surveyed_sensor_names:
 
-    # get data for the current sensor
-    water_data = get_sls_water_level_data(sensors_water.desc[index], dor_spatial_start, dor_spatial_end)
+        # get data for the current sensor
+        water_data = get_sls_water_level_data(sensors_water.desc[index], dor_spatial_start, dor_spatial_end)
 
-    if water_data.size > 0:
-        water_data['lat'] = round(sensors_water.coords[index][1], 2)
-        water_data['lng'] = round(sensors_water.coords[index][0], 2)
-        water_data['desc'] = sensors_water.desc[index]
-        water_data['water_level'] = water_data['adj_value']
-        water_data = water_data[['desc', 'lat', 'lng', 'timestamp', 'water_level']]
+        if water_data.size > 0:
+            water_data['lat'] = round(sensors_water.coords[index][1], 2)
+            water_data['lng'] = round(sensors_water.coords[index][0], 2)
+            water_data['desc'] = sensors_water.desc[index]
+            water_data['water_level'] = water_data['adj_value']
+            water_data = water_data[['desc', 'lat', 'lng', 'timestamp', 'water_level']]
 
-        """
-        nearest neighbor filtering - assuming tidal water levels won't change more than 0.3ft (adjustable), aside from waves.
-        this filter acts similar to a noise filter, which was also tested, that filters out high frequency noise, generally caused by waves/wind
-        assigns NaN value instead of removing data point
-        """
-        temp_col = water_data['water_level'].copy()
-        temp_col[(abs(temp_col - temp_col.shift(1)) > 0.3) & (abs(temp_col - temp_col.shift(-1)) > 0.3)] = np.NaN
-        water_data['filtered_water_level'] = temp_col
+            """
+            nearest neighbor filtering - assuming tidal water levels won't change more than 0.3ft (adjustable), aside from waves.
+            this filter acts similar to a noise filter, which was also tested, that filters out high frequency noise, generally caused by waves/wind
+            assigns NaN value instead of removing data point
+            """
+            temp_col = water_data['water_level'].copy()
+            temp_col[(abs(temp_col - temp_col.shift(1)) > 0.3) & (abs(temp_col - temp_col.shift(-1)) > 0.3)] = np.NaN
+            water_data['filtered_water_level'] = temp_col
 
-        # calculate data metrics
-        count_before_filter = len(water_data)
-        num_returns.append(count_before_filter)
-        count_after_filter = np.isnan(water_data['filtered_water_level']).sum()
-        filter_data_loss.append((count_before_filter - count_after_filter) / count_before_filter)
-        filter_data_loss_name.append(sensors_water.desc[index])
-        # print(count_before_filter,count_after_filter)
+            # calculate data metrics
+            count_before_filter = len(water_data)
+            num_returns.append(count_before_filter)
+            count_after_filter = np.isnan(water_data['filtered_water_level']).sum()
+            filter_data_loss.append((count_before_filter - count_after_filter) / count_before_filter)
+            filter_data_loss_name.append(sensors_water.desc[index])
+            # print(count_before_filter,count_after_filter)
 
-        sensor_data.append(water_data)
+            sensor_data.append(water_data)
 
 # concatenate all data together
 dorian_sensor_data = pd.concat(sensor_data)
