@@ -85,7 +85,7 @@ filter_data_loss = []
 num_returns = []
 filter_data_loss_name = []
 
-for index in range(sensors_water.index):
+for index in sensors_water.index:
 
     #     # only take sensors that have recent surveys
     #     if sensors_water.desc[index] in surveyed_sensor_names:
